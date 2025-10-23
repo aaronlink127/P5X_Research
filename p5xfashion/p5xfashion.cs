@@ -5,25 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class P5XImportWindow : EditorWindow {
-    public static List<Transform> GetTransformHierarchy(Transform rootTransform)
-    {
-        List<Transform> transformsList = new();
-        
-        AddTransforms(rootTransform, transformsList);
-
-        return transformsList;
-    }
-    private static void AddTransforms(Transform parentTransform, List<Transform> list)
-    {
-        list.Add(parentTransform); // Add the current parent object
-
-        // Iterate through all children of the current parent
-        foreach (Transform childTransform in parentTransform)
-        {
-            // Recursively call the method for each child GameObject
-            AddTransforms(childTransform, list);
-        }
-    }
     [MenuItem("Window/P5X Character Importer")]
     public static void OpenWindow()
     {
@@ -63,7 +44,7 @@ public class P5XImportWindow : EditorWindow {
             } else {
                 statusText += $"Rig already in scene! {newObj.name}\n";
             }
-            List<Transform> allTfs = GetTransformHierarchy(newObj.transform);
+            List<Transform> allTfs = newObj.GetComponentsInChildren<Transform>().ToList();
             foreach (GameObject fashion in fashionPrefabs) {
                 GameObject fashionObj = fashion;
                 if (PrefabUtility.IsPartOfPrefabAsset(fashionObj)) {
