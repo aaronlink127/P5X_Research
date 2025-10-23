@@ -126,8 +126,8 @@ class VFileSystem:
     def __init__(self, gameDir):
         self.mounts = []
         self.mounts.append(RealFSMount(os.path.join(gameDir, "client", "OuterPackage")))
-        self.mounts.append(RealFSMount(os.path.join(gameDir, "client", "bin")))
         self.mounts.append(VFSMount(os.path.join(gameDir, "client", "bin")))
+        self.mounts.append(RealFSMount(os.path.join(gameDir, "client", "bin")))
         # self.mounts.append(RealFSMount(os.path.join(gameDir, "client", "bin", "fileContentOut")))
 
     def exists(self, path):
