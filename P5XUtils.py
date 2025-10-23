@@ -34,10 +34,20 @@ class BaseFile:
 class RealFile(BaseFile):
     def __init__(self, path):
         self.path = path
-    def open(self, mode):
-        baseName = os.path.basename(self.path)
-        root, ext = os.path.splitext(baseName)
+
+    def readAllBytes(self):
+        root, ext = os.path.splitext(self.path)
         if ext == ".bundle":
+            baseName = os.path.basename(self.path)
+            with open(self.path, "rb") as f:
+                f.seek(getBundleObfusOffset(baseName), io.SEEK_SET)
+                return f.read()
+        return BaseFile.readAllBytes(self)
+
+    def open(self, mode):
+        root, ext = os.path.splitext(self.path)
+        if ext == ".bundle":
+            baseName = os.path.basename(self.path)
             with open(self.path, "rb") as f:
                 f.seek(getBundleObfusOffset(baseName), io.SEEK_SET)
                 return openBytes(f.read(), mode)
