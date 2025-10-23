@@ -18,5 +18,5 @@ Commands:
   find-bundle-dep <bundle-name> - Prints dependencies of a given bundle
   extract-bundle <bundle-name> <output-dir> - Extracts bundle to directory
   extract-bundle-dep <bundle-name> <output-dir> - Extracts bundle dependency tree to directory
-  extract-asset-dep <asset-name> <output-dir> - Extracts asset dependency tree of asset
+  extract-asset-dep <asset-name> <output-dir> - Extracts bundle dependency tree of asset to directory
 ```

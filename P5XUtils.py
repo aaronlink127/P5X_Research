@@ -152,7 +152,7 @@ def printCmds():
     print("  find-bundle-dep <bundle-name> - Prints dependencies of a given bundle")
     print("  extract-bundle <bundle-name> <output-dir> - Extracts bundle to directory")
     print("  extract-bundle-dep <bundle-name> <output-dir> - Extracts bundle dependency tree to directory")
-    print("  extract-asset-dep <asset-name> <output-dir> - Extracts asset dependency tree of asset")
+    print("  extract-asset-dep <asset-name> <output-dir> - Extracts bundle dependency tree of asset to directory")
 
 def verifyGamePath(path):
     return os.path.exists(os.path.join(path, "client"))
@@ -280,6 +280,11 @@ zeusManifest.loadFromFB(getBundlePath("zeusBundleManifest.txt"))
 assetMap = AssetMap()
 assetMap.loadFromFB(getBundlePath("assetMapName.txt"))
 
+def ensureOutDirectory(outDir):
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+    return outDir
+
 def listBundleDeps(man, depth = 0, depSet = None):
     if depSet is None:
         depSet = set()
@@ -314,7 +319,7 @@ def runCommand(cmd, args):
                 listBundleDeps(zeusManifest.getManifestFromName(bundleName))
         case "extract-bundle":
             bundleName = args[0]
-            outDir = args[1]
+            outDir = ensureOutDirectory(args[1])
             bundleManifest = zeusManifest.getManifestFromName(bundleName)
             if bundleManifest is None:
                 print("Couldn't find bundle " + bundleName)
@@ -324,7 +329,7 @@ def runCommand(cmd, args):
                     f.write(allBytes)
         case "extract-bundle-dep":
             bundleName = args[0]
-            outDir = args[1]
+            outDir = ensureOutDirectory(args[1])
             bundleManifest = zeusManifest.getManifestFromName(bundleName)
             if bundleManifest is None:
                 print("Couldn't find bundle " + bundleName)
@@ -336,7 +341,7 @@ def runCommand(cmd, args):
                         f.write(allBytes)
         case "extract-asset-dep":
             assetName = args[0]
-            outDir = args[1]
+            outDir = ensureOutDirectory(args[1])
             bundleName = assetMap.getBundleByAsset(assetName)
             if bundleName is None:
                 print("Couldn't find asset " + assetName)
@@ -351,7 +356,7 @@ def runCommand(cmd, args):
         case "help":
             printCmds()
         case _:
-            print("Unknown command: " + sys.argv[2] + ". Use help to see all commands.")
+            print("Unknown command: " + cmd + ". Use help to see all commands.")
 
 if len(sys.argv) < 3:
     while True:
