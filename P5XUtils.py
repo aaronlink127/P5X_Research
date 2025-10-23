@@ -3,12 +3,14 @@ import os
 import io
 import struct
 from io import StringIO, BytesIO
+import shlex
 
 def getAssetHashCode(assetName: str):
     n = 0
     for i in assetName:
         n = ord(i) + 131*n
     return n & 0x7FFFFFFF
+    
 def getBundleObfusOffset(name):
     return (getAssetHashCode(name) & 0x1F) + 8
 
@@ -141,9 +143,9 @@ class VFileSystem:
 def getBundlePath(abName):
     return "Bundles/Windows/" + str(getAssetHashCode(abName) % 200).zfill(3) + "/" + abName
 
-def printUsage():
-    print("Usage: python " + sys.argv[0] + " <path-to-game> <mode> [mode-args...]")
-    print("Modes:")
+def printCmds():
+    print("Commands:")
+    print("  help - Show this message")
     print("  find-asset <asset-name> - Prints bundle that contains asset")
     print("  find-asset-dep <asset-name> - Prints bundle that contains asset, and any dependencies")
     print("  find-bundle-dep <bundle-name> - Prints dependencies of a given bundle")
@@ -151,12 +153,32 @@ def printUsage():
     print("  extract-bundle-dep <bundle-name> <output-dir> - Extracts bundle dependency tree to directory")
     print("  extract-asset-dep <asset-name> <output-dir> - Extracts asset dependency tree of asset")
 
-if len(sys.argv) <= 2:
-    print("Not enough args")
-    printUsage()
-    exit()
-
-vfs = VFileSystem(sys.argv[1])
+def verifyGamePath(path):
+    return os.path.exists(os.path.join(path, "client"))
+vfs = None
+if len(sys.argv) < 2:
+    while vfs is None:
+        try:
+            gamePath = input("Game Path: ")
+        except KeyboardInterrupt as e:
+            exit()
+        if verifyGamePath(gamePath):
+            try:
+                vfs = VFileSystem(gamePath)
+            except Exception as e:
+                print(e)
+        else:
+            print("The path provided doesn't seem to be a P5X install!")
+else:
+    if verifyGamePath(sys.argv[1]):
+        try:
+            vfs = VFileSystem(sys.argv[1])
+        except Exception as e:
+            print(e)
+            exit()
+    else:
+        print("The path provided doesn't seem to be a P5X install!")
+        exit()
 
 class ZeusAssetBundle:
     def __init__(self, name, deps):
@@ -251,6 +273,7 @@ class AssetMap:
                 bundleName = f.read(bundleNameLen).decode('utf-8')
                 self.assetHashMap[assetNameHash] = bundleName
 
+
 zeusManifest = ZeusAssetManifest()
 zeusManifest.loadFromFB(getBundlePath("zeusBundleManifest.txt"))
 assetMap = AssetMap()
@@ -265,62 +288,81 @@ def listBundleDeps(man, depth = 0, depSet = None):
         for dep in man.deps:
             listBundleDeps(zeusManifest.bundles[dep], depth + 1, depSet)
 
-match sys.argv[2]:
-    case "find-asset":
-        assetName = sys.argv[3]
-        bundleName = assetMap.getBundleByAsset(assetName)
-        if bundleName is None:
-            print("Couldn't find asset " + assetName)
-        else:
-            print(bundleName)
-    case "find-bundle-dep":
-        bundleName = sys.argv[3]
-        bundleManifest = zeusManifest.getManifestFromName(bundleName)
-        if bundleManifest is None:
-            print("Couldn't find bundle " + bundleName)
-        else:
-            listBundleDeps(bundleManifest)
-    case "find-asset-dep":
-        assetName = sys.argv[3]
-        bundleName = assetMap.getBundleByAsset(assetName)
-        if bundleName is None:
-            print("Couldn't find asset " + assetName)
-        else:
-            listBundleDeps(zeusManifest.getManifestFromName(bundleName))
-    case "extract-bundle":
-        bundleName = sys.argv[3]
-        outDir = sys.argv[4]
-        bundleManifest = zeusManifest.getManifestFromName(bundleName)
-        if bundleManifest is None:
-            print("Couldn't find bundle " + bundleName)
-        else:
-            allBytes = vfs.readAllBytes(getBundlePath(bundleName))
-            with open(os.path.join(outDir, bundleName), "wb") as f:
-                f.write(allBytes)
-    case "extract-bundle-dep":
-        bundleName = sys.argv[3]
-        outDir = sys.argv[4]
-        bundleManifest = zeusManifest.getManifestFromName(bundleName)
-        if bundleManifest is None:
-            print("Couldn't find bundle " + bundleName)
-        else:
-            deps = zeusManifest.getDependencies(bundleManifest)
-            for dep in deps:
-                allBytes = vfs.readAllBytes(getBundlePath(dep))
-                with open(os.path.join(outDir, dep), "wb") as f:
+def runCommand(cmd, args):
+    match cmd:
+        case "find-asset":
+            assetName = args[0]
+            bundleName = assetMap.getBundleByAsset(assetName)
+            if bundleName is None:
+                print("Couldn't find asset " + assetName)
+            else:
+                print(bundleName)
+        case "find-bundle-dep":
+            bundleName = args[0]
+            bundleManifest = zeusManifest.getManifestFromName(bundleName)
+            if bundleManifest is None:
+                print("Couldn't find bundle " + bundleName)
+            else:
+                listBundleDeps(bundleManifest)
+        case "find-asset-dep":
+            assetName = args[0]
+            bundleName = assetMap.getBundleByAsset(assetName)
+            if bundleName is None:
+                print("Couldn't find asset " + assetName)
+            else:
+                listBundleDeps(zeusManifest.getManifestFromName(bundleName))
+        case "extract-bundle":
+            bundleName = args[0]
+            outDir = args[1]
+            bundleManifest = zeusManifest.getManifestFromName(bundleName)
+            if bundleManifest is None:
+                print("Couldn't find bundle " + bundleName)
+            else:
+                allBytes = vfs.readAllBytes(getBundlePath(bundleName))
+                with open(os.path.join(outDir, bundleName), "wb") as f:
                     f.write(allBytes)
-    case "extract-asset-dep":
-        assetName = sys.argv[3]
-        outDir = sys.argv[4]
-        bundleName = assetMap.getBundleByAsset(assetName)
-        if bundleName is None:
-            print("Couldn't find asset " + assetName)
-        else:
-            deps = zeusManifest.getDependencies(zeusManifest.getManifestFromName(bundleName))
-            for dep in deps:
-                allBytes = vfs.readAllBytes(getBundlePath(dep))
-                with open(os.path.join(outDir, dep), "wb") as f:
-                    f.write(allBytes)
-    case _:
-        print("Unknown command: " + sys.argv[2])
-        printUsage()
+        case "extract-bundle-dep":
+            bundleName = args[0]
+            outDir = args[1]
+            bundleManifest = zeusManifest.getManifestFromName(bundleName)
+            if bundleManifest is None:
+                print("Couldn't find bundle " + bundleName)
+            else:
+                deps = zeusManifest.getDependencies(bundleManifest)
+                for dep in deps:
+                    allBytes = vfs.readAllBytes(getBundlePath(dep))
+                    with open(os.path.join(outDir, dep), "wb") as f:
+                        f.write(allBytes)
+        case "extract-asset-dep":
+            assetName = args[0]
+            outDir = args[1]
+            bundleName = assetMap.getBundleByAsset(assetName)
+            if bundleName is None:
+                print("Couldn't find asset " + assetName)
+            else:
+                deps = zeusManifest.getDependencies(zeusManifest.getManifestFromName(bundleName))
+                for dep in deps:
+                    allBytes = vfs.readAllBytes(getBundlePath(dep))
+                    with open(os.path.join(outDir, dep), "wb") as f:
+                        f.write(allBytes)
+        case "exit":
+            exit()
+        case "help":
+            printCmds()
+        case _:
+            print("Unknown command: " + sys.argv[2] + ". Use help to see all commands.")
+
+if len(sys.argv) < 3:
+    while True:
+        try:
+            cmd = input("> ")
+        except KeyboardInterrupt as e:
+            exit()
+        args = shlex.split(cmd)
+        try:
+            runCommand(args[0], args[1:])
+        except Exception as e:
+            print("An error occurred while executing a command.")
+            print(e)
+else:
+    runCommand(sys.argv[2], sys.argv[3:])
