@@ -30,13 +30,16 @@ public class P5XImportWindow : EditorWindow {
         var window = GetWindow<P5XImportWindow>();
         window.titleContent = new GUIContent("P5X Character Importer");
     }
+    static readonly string[] qualities = {"High", "Lod", "Shadow"};
     private GameObject basePrefab;
     private List<GameObject> fashionPrefabs;
     private Vector2 scrollPos;
+    private int quality = 0;
     private string statusText = "";
     private void OnGUI()
     {
         fashionPrefabs ??= new();
+        quality = EditorGUILayout.Popup("Model Quality", quality, qualities);
         basePrefab = EditorGUILayout.ObjectField("Rig Prefab", basePrefab, typeof(GameObject), true) as GameObject;
         GUILayout.Label("Fashion Parts:");
         fashionPrefabs.RemoveAll(e=>e == null);
@@ -60,6 +63,7 @@ public class P5XImportWindow : EditorWindow {
             } else {
                 statusText += $"Rig already in scene! {newObj.name}\n";
             }
+            List<Transform> allTfs = GetTransformHierarchy(newObj.transform);
             foreach (GameObject fashion in fashionPrefabs) {
                 GameObject fashionObj = fashion;
                 if (PrefabUtility.IsPartOfPrefabAsset(fashionObj)) {
@@ -72,8 +76,23 @@ public class P5XImportWindow : EditorWindow {
                 foreach (MUActorMeshExportInfo exportInfo in fashionObj.GetComponentsInChildren<MUActorMeshExportInfo>()) {
                     GameObject obj = exportInfo.gameObject;
                     // statusText += fileToFilter(exportInfo.mHighMeshName);
+                    string meshName = exportInfo.mHighMeshName;
+                    string rootBoneName = exportInfo.mHighRootBoneName;
+                    string[] boneNames = exportInfo.mHighMeshBoneNames;
+                    Material[] meshMaterials = exportInfo.HighMeshMaterials;
+                    if (quality == 1) {
+                        meshName = exportInfo.mLODMeshName;
+                        rootBoneName = exportInfo.mLodRootBoneName;
+                        boneNames = exportInfo.mLodMeshBoneNames;
+                        meshMaterials = exportInfo.mLodMaterials;
+                    } else if (quality == 2) {
+                        meshName = exportInfo.mShadowMeshName;
+                        rootBoneName = exportInfo.mShadowRootBoneName;
+                        boneNames = exportInfo.mShadowMeshBoneNames;
+                        meshMaterials = exportInfo.mShadowMaterials;
+                    }
                     statusText += $"\t\tProcessing {obj.name}...\n";
-                    string assetPath = AssetDatabase.GetAllAssetPaths().FirstOrDefault(e=>e.EndsWith("/" + exportInfo.mHighMeshName));
+                    string assetPath = AssetDatabase.GetAllAssetPaths().FirstOrDefault(e=>e.EndsWith("/" + meshName));
                     if (assetPath != null && assetPath != "") {
                         Mesh newMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath) as Mesh;
                         if (!obj.TryGetComponent<SkinnedMeshRenderer>(out SkinnedMeshRenderer targetSkin))
@@ -83,13 +102,12 @@ public class P5XImportWindow : EditorWindow {
                         targetSkin.sharedMesh = newMesh;
                         if (obj != null) {
                             statusText += $"\t\tAdding Skinned Mesh to {obj.name}...\n";
-                            Transform[] newBones = new Transform[exportInfo.mHighMeshBoneNames.Length];
-                            List<Transform> allTfs = GetTransformHierarchy(newObj.transform);
+                            Transform[] newBones = new Transform[boneNames.Length];
                             int idx = 0;
-                            foreach (string boneName in exportInfo.mHighMeshBoneNames) {
+                            foreach (string boneName in boneNames) {
                                 Transform tst = allTfs.Find(e=>e.name == boneName);
                                 if (tst != null) {
-                                    if (boneName == exportInfo.mHighRootBoneName) {
+                                    if (boneName == rootBoneName) {
                                         targetSkin.rootBone = tst;
                                     }
                                     newBones[idx] = tst;
@@ -102,7 +120,7 @@ public class P5XImportWindow : EditorWindow {
                             if (exportInfo.IsFaceMesh) {
                                 targetSkin.SetMaterials(exportInfo.mFaceMaterials.ToList());
                             } else {
-                                targetSkin.SetMaterials(exportInfo.mHighMeshMaterials.ToList());
+                                targetSkin.SetMaterials(meshMaterials.ToList());
                             }
                         }
                     } else {
