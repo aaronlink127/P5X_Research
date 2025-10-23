@@ -1,4 +1,6 @@
 # P5X Research
+## p5xfashion.cs
+An editor script for unity that makes importing characters that use the fashion system easier. Just add to your project and a new entry will be added to the Window menu bar option "P5X Character Importer". Then, drag in your main prefab and any fashion prefabs, and it will assemble the model in the current scene automatically (assuming all meshes can be found).
 ## P5XUtils.py
 This utility can be used in 2 ways, single-command mode or interactive mode.
 
