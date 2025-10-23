@@ -10,6 +10,7 @@ The commands are as follows:
 ```
 Commands:
   help - Show this message
+  exit - Exit this utility
   find-asset <asset-name> - Prints bundle that contains asset
   find-asset-dep <asset-name> - Prints bundle that contains asset, and any dependencies
   find-bundle-dep <bundle-name> - Prints dependencies of a given bundle

@@ -146,6 +146,7 @@ def getBundlePath(abName):
 def printCmds():
     print("Commands:")
     print("  help - Show this message")
+    print("  exit - Exit this utility")
     print("  find-asset <asset-name> - Prints bundle that contains asset")
     print("  find-asset-dep <asset-name> - Prints bundle that contains asset, and any dependencies")
     print("  find-bundle-dep <bundle-name> - Prints dependencies of a given bundle")
