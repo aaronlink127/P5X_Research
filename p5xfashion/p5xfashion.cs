@@ -79,7 +79,7 @@ public class P5XImportWindow : EditorWindow {
                     string meshName = exportInfo.mHighMeshName;
                     string rootBoneName = exportInfo.mHighRootBoneName;
                     string[] boneNames = exportInfo.mHighMeshBoneNames;
-                    Material[] meshMaterials = exportInfo.HighMeshMaterials;
+                    Material[] meshMaterials = exportInfo.mHighMeshMaterials;
                     if (quality == 1) {
                         meshName = exportInfo.mLODMeshName;
                         rootBoneName = exportInfo.mLodRootBoneName;
