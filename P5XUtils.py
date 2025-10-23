@@ -284,7 +284,7 @@ def ensureOutDirectory(outDir):
     if not os.path.exists(outDir):
         os.makedirs(outDir)
     if not os.path.isdir(outDir):
-        raise Exception("File given, folder is expected.")
+        raise Exception("\"" + outDir + "\" exists, but is a file, not a folder.")
     return outDir
 
 def listBundleDeps(man, depth = 0, depSet = None):
