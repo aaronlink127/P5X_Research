@@ -69,7 +69,7 @@ class VFile(BaseFile):
 
     def open(self, mode):
         allBytes = self.readAllBytes()
-        openBytes(allBytes, mode)
+        return openBytes(allBytes, mode)
 
 class RealFSMount:
     def __init__(self, root):
