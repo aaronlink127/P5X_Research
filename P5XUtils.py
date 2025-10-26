@@ -376,7 +376,7 @@ if len(sys.argv) < 3:
             cmd = input("> ")
         except KeyboardInterrupt as e:
             exit()
-        args = shlex.split(cmd)
+        args = shlex.split(cmd, posix=False)
         try:
             runCommand(args[0], args[1:])
         except Exception as e:
