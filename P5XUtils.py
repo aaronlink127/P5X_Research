@@ -331,7 +331,7 @@ def runCommand(cmd, args):
                 listBundleDeps(zeusManifest.getManifestFromName(bundleName))
         case "extract-bundle":
             bundleName = args[0]
-            outDir = ensureOutDirectory(args[1])
+            outDir = ensureOutDirectory(args[1].strip("\"\'"))
             bundleManifest = zeusManifest.getManifestFromName(bundleName)
             if bundleManifest is None:
                 print("Couldn't find bundle " + bundleName)
@@ -341,7 +341,7 @@ def runCommand(cmd, args):
                     f.write(allBytes)
         case "extract-bundle-dep":
             bundleName = args[0]
-            outDir = ensureOutDirectory(args[1])
+            outDir = ensureOutDirectory(args[1].strip("\"\'"))
             bundleManifest = zeusManifest.getManifestFromName(bundleName)
             if bundleManifest is None:
                 print("Couldn't find bundle " + bundleName)
@@ -353,7 +353,7 @@ def runCommand(cmd, args):
                         f.write(allBytes)
         case "extract-asset-dep":
             assetName = args[0]
-            outDir = ensureOutDirectory(args[1])
+            outDir = ensureOutDirectory(args[1].strip("\"\'"))
             bundleName = assetMap.getBundleByAsset(assetName)
             if bundleName is None:
                 print("Couldn't find asset " + assetName)
