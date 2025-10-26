@@ -98,11 +98,7 @@ public class P5XImportWindow : EditorWindow {
                                 idx += 1;
                             }
                             targetSkin.bones = newBones;
-                            if (exportInfo.IsFaceMesh) {
-                                targetSkin.SetMaterials(exportInfo.mFaceMaterials.ToList());
-                            } else {
-                                targetSkin.SetMaterials(meshMaterials.ToList());
-                            }
+                            targetSkin.SetMaterials(meshMaterials.ToList());
                         }
                     } else {
                         statusText += $"\tFailed to find mesh {exportInfo.mHighMeshName}\n";
