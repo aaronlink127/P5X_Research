@@ -26,12 +26,12 @@ def openBytes(s, mode):
     else:
         return StringIO(s.decode('cp1252'))
 
-class BaseFile:
+class IFile:
     def readAllBytes(self):
         with self.open("rb") as f:
             return f.read()
 
-class RealFile(BaseFile):
+class RealFile(IFile):
     def __init__(self, path):
         self.path = path
 
@@ -42,7 +42,7 @@ class RealFile(BaseFile):
             with open(self.path, "rb") as f:
                 f.seek(getBundleObfusOffset(baseName), io.SEEK_SET)
                 return f.read()
-        return BaseFile.readAllBytes(self)
+        return IFile.readAllBytes(self)
 
     def open(self, mode):
         root, ext = os.path.splitext(self.path)
@@ -54,7 +54,7 @@ class RealFile(BaseFile):
         else:
             return io.open(self.path, mode)
 
-class VFile(BaseFile):
+class VFile(IFile):
     def __init__(self, srcfs, idx, size, pos):
         self.srcfs = srcfs
         self.idx = idx
