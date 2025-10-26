@@ -44,7 +44,7 @@ public class P5XImportWindow : EditorWindow {
             } else {
                 statusText += $"Rig already in scene! {newObj.name}\n";
             }
-            List<Transform> allTfs = newObj.GetComponentsInChildren<Transform>().ToList();
+            List<Transform> allTfs = newObj.GetComponentsInChildren<Transform>(true).ToList();
             foreach (GameObject fashion in fashionPrefabs) {
                 GameObject fashionObj = fashion;
                 if (PrefabUtility.IsPartOfPrefabAsset(fashionObj)) {
