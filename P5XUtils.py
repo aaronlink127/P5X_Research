@@ -112,10 +112,11 @@ class VFSMount:
                     f.seek(entryMetaEnd, io.SEEK_SET)
                     filePathLen = readUInt32(f)
                     filePath = f.read(filePathLen).decode("utf-8")
-                    baseName = os.path.basename(filePath)
-                    root, ext = os.path.splitext(baseName)
-                    if ext == ".bundle":
-                        fileOffset = fileOffset + getBundleObfusOffset(baseName)
+                    if filePath.endswith(".bundle"):
+                        baseName = os.path.basename(filePath)
+                        offs = getBundleObfusOffset(baseName)
+                        fileOffset += offs
+                        fileSize -= offs
                     self.map[filePath] = VFile(self, i, fileSize, fileOffset)
 
     def getFile(self, path):
